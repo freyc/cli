@@ -110,6 +110,27 @@ inline T unsigned_digits_from_string(const std::string& s)
 }
 
 template <typename T>
+inline T unsigned_hex_digits_from_string(const std::string& s)
+{
+    if (s.empty())
+        throw bad_conversion();
+    T result = 0;
+    for (char c: s)
+    {
+        if (!std::isxdigit(c))
+            throw bad_conversion();
+
+        c = std::toupper(c);
+        const T digit = c < 'A' ? static_cast<T>( c - '0' ) : static_cast<T>( c - 'A' + 10u );
+        const T tmp = (result * 0x10) + digit;
+        if (result != ((tmp-digit)/0x10) || (tmp < result))
+            throw bad_conversion();
+        result = tmp;
+    }
+    return result;
+}
+
+template <typename T>
 inline T unsigned_from_string(std::string s)
 {
     if (s.empty())
@@ -117,6 +138,12 @@ inline T unsigned_from_string(std::string s)
     if (s[0] == '+')
     {
         s = s.substr(1);
+    }
+
+    if(s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))
+    {
+        s = s.substr(2);
+        return unsigned_hex_digits_from_string<T>(s);
     }
     return unsigned_digits_from_string<T>(s);
 }
